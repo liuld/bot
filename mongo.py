@@ -9,4 +9,6 @@ class Mongo(object):
 
     def __init__(self, host='localhost', port=27017):
         self.client = pymongo.MongoClient(host=host, port=port)
-        print(dir(self.client.admin))
+
+    def get_db_cursor(self, db):
+        return self.client[db]
