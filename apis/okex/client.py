@@ -42,11 +42,11 @@ class Client(object):
             self.first = False
 
         print("url:", url)
-        logging.info("url:" + '"' + url + '"')
+        # logging.info("url:" + '"' + url + '"')
         # print("headers:", header)
         # logging.info("headers:" + str(header))
         print("body:", body)
-        logging.info("body:" + body)
+        # logging.info("body:" + body)
 
         # send request
         response = None

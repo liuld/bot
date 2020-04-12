@@ -18,3 +18,25 @@ class Mongo(object):
 
     def get_doc(self, db, collection):
         return self.get_db_cursor(db)[collection].find().sort('time', pymongo.DESCENDING)
+
+    @staticmethod
+    def get_last_record(cursor):
+        return cursor.find().sort('time', pymongo.DESCENDING).limit(1)
+
+
+if __name__ == '__main__':
+    import json
+
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+
+    mongo = Mongo(
+        host=config['mongo_host'],
+        port=config['mongo_port'],
+        username=config['mongo_username'],
+        password=config['mongo_password']
+    )
+
+    for i in mongo.get_doc(config['mongo_db'], config['mongo_collection']):
+        print(i)
+
