@@ -15,3 +15,6 @@ class Mongo(object):
 
     def get_db_cursor(self, db):
         return self.client[db]
+
+    def get_doc(self, db, collection):
+        return self.get_db_cursor(db)[collection].find().sort('time', pymongo.DESCENDING)

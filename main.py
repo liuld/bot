@@ -24,13 +24,13 @@ if __name__ == '__main__':
     mongo = Mongo(host='192.168.10.20', port=27017)
 
     cursor = mongo.get_db_cursor('symbol')['btc']
-    cursor.create_index('time', unique=True)
+    # cursor.create_index('time', unique=True)
 
     now = param_time(get_timestamp())
 
     while True:
         try:
-            result = spotAPI.get_kline('', 60, now)
+            result = spotAPI.get_kline('BTC-USDT', 60, now)
             for k in result:
                 update_or_insert_to_mongodb(cursor, k)
             if now != result[0][0]:
