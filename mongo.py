@@ -1,42 +1,29 @@
-#!/usr/local/bin/python3
+# !/usr/local/bin/python3
 # _*_ coding: utf-8 _*_
-
 
 import pymongo
 
 
 class Mongo(object):
 
-    def __init__(self, host='localhost', port=27017, username=None, password=None):
-        self.client = pymongo.MongoClient(host=host, port=port)
-        if username:
-            admin = self.client['admin']
-            admin.authenticate(username, password)
+    def __init__(
+            self, host='localhost', port=27017, username=None, password=None):
+
+        if username and password:
+            self.conn = pymongo.MongoClient(
+                host=host, port=port, username=username, password=password)
+        else:
+            self.conn = pymongo.MongoClient(host=host, port=port)
 
     def get_db_cursor(self, db):
-        return self.client[db]
+        return self.conn[db]
 
-    def get_doc(self, db, collection):
-        return self.get_db_cursor(db)[collection].find().sort('time', pymongo.DESCENDING)
+    def get_collection_cursor(self, db, collection):
+        return self.conn[db][collection]
 
-    @staticmethod
-    def get_last_record(cursor):
-        return cursor.find().sort('time', pymongo.DESCENDING).limit(1)
+    def get_doc(self, db, collection, query={}, filters={}, limit=0, del_id=True):
+        if del_id:
+            filters['_id'] = 0
+        return self.get_collection_cursor(db, collection).find(query, filters).limit(limit)
 
-
-if __name__ == '__main__':
-    import json
-
-    with open('config.json', 'r') as f:
-        config = json.load(f)
-
-    mongo = Mongo(
-        host=config['mongo_host'],
-        port=config['mongo_port'],
-        username=config['mongo_username'],
-        password=config['mongo_password']
-    )
-
-    for i in mongo.get_doc(config['mongo_db'], config['mongo_collection']):
-        print(i)
 

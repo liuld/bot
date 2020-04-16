@@ -7,7 +7,6 @@ import datetime
 
 def get_timestamp():
     now = datetime.datetime.now()
-    # t = now.isoformat("T", "milliseconds")
     return datetime.datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
 
 
@@ -34,7 +33,3 @@ def kline_to_dict(kline_list):
         'volume': volume
     }
 
-
-def update_or_insert_to_mongodb(cursor, kline):
-    kline_dict = kline_to_dict(kline)
-    cursor.update_one({'time': kline_dict['time']}, {'$set': kline_dict}, upsert=True)

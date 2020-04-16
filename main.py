@@ -5,11 +5,11 @@
 import apis.okex.spot_api as spot
 from utils import *
 from mongo import Mongo
+from pymongo import DESCENDING
 
 import time
 import json
 import logging
-from pymongo import DESCENDING
 
 
 log_format = '%(asctime)s - %(levelname)s - %(message)s'
@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     cursor.create_index('time', unique=True)
 
-    last_record = list(mongo.get_last_record(cursor))
+    last_record = list(cursor.find().sort('time', DESCENDING).limit(1))
 
     if len(last_record) > 0:
         now = param_time(last_record[0]['time'])
@@ -48,9 +48,10 @@ if __name__ == '__main__':
         try:
             result = spotAPI.get_kline(config['symbol'], 60, now)
             for k in result:
-                update_or_insert_to_mongodb(cursor, k)
-            if now != result[0][0]:
-                now = result[0][0]
+                kline_dict = kline_to_dict(k)
+                cursor.update_one({'time': kline_dict['time']}, {'$set': kline_dict}, upsert=True)
+            if len(result) > 1 and now != result[1][0]:
+                now = result[1][0]
         except Exception as e:
             logging.error('get kline error: {}'.format(e))
 
