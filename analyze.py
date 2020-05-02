@@ -109,10 +109,10 @@ if __name__ == '__main__':
                 one_hours_data['close'][-1] <= one_hours_boll['lowerband'][-1]:
             if boll_send_count < 3:
                 boll_info = 'boll 提醒: 价格突破boll上/下轨线, 当前价格: {} up: {} middle: {}, lower: {}'.format(
-                        one_hours_data['close'][-1],
-                        one_hours_boll['upperband'][-1],
-                        one_hours_boll['middleband'][-1],
-                        one_hours_boll['lowerband'][-1],
+                        round(one_hours_data['close'][-1], 1),
+                        round(one_hours_boll['upperband'][-1], 1),
+                        round(one_hours_boll['middleband'][-1], 1),
+                        round(one_hours_boll['lowerband'][-1], 1)
                 )
                 logging.info(boll_info)
                 alert_message(config['corp_id'], config['corp_secret'], boll_info)
