@@ -10,7 +10,7 @@ import logging
 
 
 from mongo import Mongo
-from send_mail import send_mail
+from wx import WeChat
 
 
 log_format = '%(asctime)s - %(levelname)s - %(message)s'
@@ -59,6 +59,14 @@ class ANALYSE(object):
         return bbands_df
 
 
+def alert_message(corp_id, corp_secret, messages):
+    try:
+        bot = WeChat(corp_id, corp_secret)
+        bot.send_msg(messages)
+    except Exception as e:
+        logging.error("alert_message:", str(e))
+
+
 if __name__ == '__main__':
 
     # 加载配置
@@ -99,49 +107,30 @@ if __name__ == '__main__':
         one_hours_rsi = analyse.get_rsi('1H')
 
         # 判断rsi超买超卖
-        if one_hours_rsi['rsi6'][-1] > 90 or one_hours_rsi['rsi6'][-1] < 20:
+        if one_hours_rsi['rsi6'][-1] > 93 or one_hours_rsi['rsi6'][-1] < 10:
             if send_count < 3:
-                logging.info('rsi 提醒: rsi6 大于90 或 小于20, 当前rsi值: {}, {}, {}, 价格: {}'.format(
+                rsi_info = 'rsi 提醒: rsi6 大于90 或 小于20, 当前rsi值: {}, {}, {}, 价格: {}'.format(
                     one_hours_rsi['rsi6'][-1],
                     one_hours_rsi['rsi12'][-1],
                     one_hours_rsi['rsi24'][-1],
                     one_hours_data['close'][-1]
-                ))
-                send_mail('13435600095@163.com', 'rsi 提醒', 'rsi6 大于90 或 小于20', config['mail_pass'])
+                )
+                logging.info(rsi_info)
+                alert_message(config['corp_id'], config['corp_secret'], rsi_info)
                 send_count += 1
         else:
             send_count = 0
 
-        # 判断价格突破boll中轨线
-        if one_hours_data['close'][-1] > one_hours_boll['middleband'][-1]:
-            if boll_direction != 'up':
-                send_mail('13435600095@163.com', 'boll 提醒', '价格突破boll中轨线向上', config['mail_pass'])
-                boll_direction = 'up'
-        else:
-            if boll_direction != 'down':
-                send_mail('13435600095@163.com', 'boll 提醒', '价格突破boll中轨线向下', config['mail_pass'])
-                boll_direction = 'down'
-
-        # 判断rsi6 突破 rsi24
-        if one_hours_rsi['rsi6'][-1] > one_hours_rsi['rsi24'][-1]:
-            if rsi_direction != 'up':
-                logging.info('rsi 提醒: rsi6向上突破rsi24, 当前rsi值: {}, {}, {}, 价格: {}'.format(
-                    one_hours_rsi['rsi6'][-1],
-                    one_hours_rsi['rsi12'][-1],
-                    one_hours_rsi['rsi24'][-1],
-                    one_hours_data['close'][-1]
-                ))
-                send_mail('13435600095@163.com', 'rsi 提醒', 'rsi6向上突破rsi24', config['mail_pass'])
-                rsi_direction = 'up'
-        else:
-            if rsi_direction != 'down':
-                logging.info('rsi 提醒: rsi6向下突破rsi24, 当前rsi值: {}, {}, {}, 价格: {}'.format(
-                    one_hours_rsi['rsi6'][-1],
-                    one_hours_rsi['rsi12'][-1],
-                    one_hours_rsi['rsi24'][-1],
-                    one_hours_data['close'][-1]
-                ))
-                send_mail('13435600095@163.com', 'rsi 提醒', 'rsi6向下突破rsi24', config['mail_pass'])
-                rsi_direction = 'down'
+        # 判断价格突破boll上/下轨线
+        if one_hours_data['close'][-1] >= one_hours_boll['upperband'][-1] or\
+                one_hours_data['close'][-1] <= one_hours_boll['lowerband'][-1]:
+            boll_info = 'boll 提醒: 价格突破boll上/下轨线, 当前价格: {} up: {} middle: {}, lower: {}'.format(
+                    one_hours_data['close'][-1],
+                    one_hours_boll['upperband'][-1],
+                    one_hours_boll['middleband'][-1],
+                    one_hours_boll['lowerband'][-1],
+            )
+            logging.info(boll_info)
+            alert_message(config['corp_id'], config['corp_secret'], boll_info)
 
         time.sleep(15)
