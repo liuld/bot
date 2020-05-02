@@ -81,9 +81,7 @@ if __name__ == '__main__':
         password=config['mongo_password']
     )
 
-    send_count = 0
-    boll_direction = None
-    rsi_direction = None
+    rsi_send_count = boll_send_count = 0
 
     while True:
         # 查询数据
@@ -106,9 +104,25 @@ if __name__ == '__main__':
         # 一小时周期rsi数据
         one_hours_rsi = analyse.get_rsi('1H')
 
+        # 判断价格突破boll上/下轨线
+        if one_hours_data['close'][-1] >= one_hours_boll['upperband'][-1] or\
+                one_hours_data['close'][-1] <= one_hours_boll['lowerband'][-1]:
+            if boll_send_count < 3:
+                boll_info = 'boll 提醒: 价格突破boll上/下轨线, 当前价格: {} up: {} middle: {}, lower: {}'.format(
+                        one_hours_data['close'][-1],
+                        one_hours_boll['upperband'][-1],
+                        one_hours_boll['middleband'][-1],
+                        one_hours_boll['lowerband'][-1],
+                )
+                logging.info(boll_info)
+                alert_message(config['corp_id'], config['corp_secret'], boll_info)
+                boll_send_count += 1
+        else:
+            boll_send_count = 0
+
         # 判断rsi超买超卖
         if one_hours_rsi['rsi6'][-1] > 93 or one_hours_rsi['rsi6'][-1] < 10:
-            if send_count < 3:
+            if rsi_send_count < 3:
                 rsi_info = 'rsi 提醒: rsi6 大于90 或 小于20, 当前rsi值: {}, {}, {}, 价格: {}'.format(
                     one_hours_rsi['rsi6'][-1],
                     one_hours_rsi['rsi12'][-1],
@@ -117,20 +131,8 @@ if __name__ == '__main__':
                 )
                 logging.info(rsi_info)
                 alert_message(config['corp_id'], config['corp_secret'], rsi_info)
-                send_count += 1
+                rsi_send_count += 1
         else:
             send_count = 0
-
-        # 判断价格突破boll上/下轨线
-        if one_hours_data['close'][-1] >= one_hours_boll['upperband'][-1] or\
-                one_hours_data['close'][-1] <= one_hours_boll['lowerband'][-1]:
-            boll_info = 'boll 提醒: 价格突破boll上/下轨线, 当前价格: {} up: {} middle: {}, lower: {}'.format(
-                    one_hours_data['close'][-1],
-                    one_hours_boll['upperband'][-1],
-                    one_hours_boll['middleband'][-1],
-                    one_hours_boll['lowerband'][-1],
-            )
-            logging.info(boll_info)
-            alert_message(config['corp_id'], config['corp_secret'], boll_info)
 
         time.sleep(15)
