@@ -81,6 +81,10 @@ if __name__ == '__main__':
         password=config['mongo_password']
     )
 
+    start_time = config['analyse_start_time']
+
+    decimal = config['analyse_decimal']
+
     rsi_send_count = boll_send_count = 0
 
     while True:
@@ -88,7 +92,7 @@ if __name__ == '__main__':
         data = mongo.get_doc(
             db=config['mongo_db'],
             collection=config['mongo_collection'],
-            query={'time': {'$gte': '2020-04-16 16:00:00'}},
+            query={'time': {'$gte': start_time}},
             filters={},
             limit=0
         )
@@ -109,10 +113,10 @@ if __name__ == '__main__':
                 one_hours_data['close'][-1] <= one_hours_boll['lowerband'][-1]:
             if boll_send_count < 3:
                 boll_info = 'boll 提醒: 价格突破boll上/下轨线, 当前价格: {} up: {} middle: {}, lower: {}'.format(
-                        round(one_hours_data['close'][-1], 1),
-                        round(one_hours_boll['upperband'][-1], 1),
-                        round(one_hours_boll['middleband'][-1], 1),
-                        round(one_hours_boll['lowerband'][-1], 1)
+                        round(one_hours_data['close'][-1], decimal),
+                        round(one_hours_boll['upperband'][-1], decimal),
+                        round(one_hours_boll['middleband'][-1], decimal),
+                        round(one_hours_boll['lowerband'][-1], decimal)
                 )
                 logging.info(boll_info)
                 alert_message(config['corp_id'], config['corp_secret'], boll_info)
